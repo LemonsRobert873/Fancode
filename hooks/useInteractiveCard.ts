@@ -9,7 +9,9 @@ export const useInteractiveCard = <T extends HTMLElement,>() => {
         if (!card) return;
 
         const glow = card.querySelector('.card-glow') as HTMLElement;
-        if (!glow) return;
+        const img = card.querySelector('img') as HTMLImageElement;
+
+        if (!glow || !img) return;
 
         const handleMouseMove = (e: MouseEvent) => {
             const rect = card.getBoundingClientRect();
@@ -22,10 +24,16 @@ export const useInteractiveCard = <T extends HTMLElement,>() => {
 
             glow.style.setProperty('--x', `${x}px`);
             glow.style.setProperty('--y', `${y}px`);
+
+            // Parallax effect: move image in opposite direction of tilt, and scale it up
+            const parallaxX = rotateY * -3; // Multiplier for effect intensity
+            const parallaxY = rotateX * -3;
+            img.style.transform = `scale(1.1) translateX(${parallaxX}px) translateY(${parallaxY}px)`;
         };
 
         const handleMouseLeave = () => {
             card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+            img.style.transform = 'scale(1) translateX(0px) translateY(0px)';
         };
 
         card.addEventListener('mousemove', handleMouseMove);

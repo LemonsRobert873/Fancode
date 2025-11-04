@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Match } from './types';
 import Header from './components/Header';
@@ -16,10 +15,18 @@ const App: React.FC = () => {
     const [tournaments, setTournaments] = useState<string[]>([]);
     const [selectedTournament, setSelectedTournament] = useState<string>('All');
     const [selectedStatus, setSelectedStatus] = useState<string>('All');
+    const [searchQuery, setSearchQuery] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [preferredStream, setPreferredStream] = useState<string>('None');
+    const [availableStreamTypes, setAvailableStreamTypes] = useState<string[]>([]);
 
     useEffect(() => {
+        const savedPreference = localStorage.getItem('preferredStream');
+        if (savedPreference) {
+            setPreferredStream(savedPreference);
+        }
+
         const fetchAndRender = async () => {
             try {
                 const res = await fetch(DATA_URL);
@@ -47,6 +54,24 @@ const App: React.FC = () => {
                 const uniqueTournaments = [...new Set(fetchedMatches.map(m => m.tournament).filter(Boolean))];
                 setTournaments(uniqueTournaments);
 
+                const allStreamKeys = new Set<string>();
+                fetchedMatches.forEach(match => {
+                    if (match.STREAMING_CDN) {
+                        Object.keys(match.STREAMING_CDN).forEach(key => {
+                            if (key !== 'Primary_Playback_URL' && key.toLowerCase() !== 'language') {
+                                allStreamKeys.add(key);
+                            }
+                        });
+                    }
+                    if (match.adfree_stream && match.adfree_stream !== "Unavailable") {
+                        allStreamKeys.add('adfree_stream');
+                    }
+                    if (match.dai_stream && match.dai_stream !== "Unavailable") {
+                        allStreamKeys.add('dai_stream');
+                    }
+                });
+                setAvailableStreamTypes(Array.from(allStreamKeys).sort());
+
             } catch (err) {
                 console.error("Failed to load match data:", err);
                 setError("Could not load matches. Please check your connection and try again.");
@@ -60,6 +85,14 @@ const App: React.FC = () => {
 
     useEffect(() => {
         let tempMatches = [...allMatches];
+
+        if (searchQuery) {
+            const lowercasedQuery = searchQuery.toLowerCase();
+            tempMatches = tempMatches.filter(m =>
+                m.title.toLowerCase().includes(lowercasedQuery) ||
+                (m.tournament && m.tournament.toLowerCase().includes(lowercasedQuery))
+            );
+        }
 
         if (selectedStatus === 'Live') {
             tempMatches = tempMatches.filter(m => m.status?.toUpperCase() === 'LIVE');
@@ -76,13 +109,24 @@ const App: React.FC = () => {
         }
 
         setFilteredMatches(tempMatches);
-    }, [allMatches, selectedTournament, selectedStatus, spotlightMatch]);
+    }, [allMatches, selectedTournament, selectedStatus, spotlightMatch, searchQuery]);
+
+    const handleSetPreferredStream = (streamType: string) => {
+        setPreferredStream(streamType);
+        localStorage.setItem('preferredStream', streamType);
+    };
 
     return (
         <>
-            <Header />
+            <Header 
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                availableStreamTypes={availableStreamTypes}
+                preferredStream={preferredStream}
+                onPreferredStreamChange={handleSetPreferredStream}
+            />
             <main className="max-w-7xl mx-auto px-4 pb-12">
-                {spotlightMatch && <SpotlightCard match={spotlightMatch} />}
+                {spotlightMatch && <SpotlightCard match={spotlightMatch} preferredStream={preferredStream} />}
 
                 <div className="mt-16 mb-8 px-2">
                     <h2 className="text-2xl font-bold tracking-tight text-slate-100">Live & Upcoming</h2>
@@ -108,7 +152,7 @@ const App: React.FC = () => {
                          <p className="col-span-full text-center text-slate-400">No matches found for the selected filters.</p>
                     ) : (
                         filteredMatches.map((match, index) => (
-                            <MatchCard key={match.match_id || index} match={match} index={index} />
+                            <MatchCard key={match.match_id || index} match={match} index={index} preferredStream={preferredStream} />
                         ))
                     )}
                 </div>

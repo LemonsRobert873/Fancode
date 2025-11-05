@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Match } from '../types';
+import { Match } from '../types.ts';
 
 interface SpotlightCardProps {
     match: Match;

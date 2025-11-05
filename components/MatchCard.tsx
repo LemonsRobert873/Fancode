@@ -1,6 +1,6 @@
 import React from 'react';
-import { Match } from '../types';
-import { useInteractiveCard } from '../hooks/useInteractiveCard';
+import { Match } from '../types.ts';
+import { useInteractiveCard } from '../hooks/useInteractiveCard.ts';
 
 interface MatchCardProps {
     match: Match;

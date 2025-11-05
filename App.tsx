@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Match } from './types';
-import Header from './components/Header';
-import SpotlightCard from './components/SpotlightCard';
-import MatchCard from './components/MatchCard';
-import LoadingSkeletons from './components/LoadingSkeletons';
-import FilterControls from './components/FilterControls';
+import { Match } from './types.ts';
+import Header from './components/Header.tsx';
+import SpotlightCard from './components/SpotlightCard.tsx';
+import MatchCard from './components/MatchCard.tsx';
+import LoadingSkeletons from './components/LoadingSkeletons.tsx';
+import FilterControls from './components/FilterControls.tsx';
 
 const DATA_URL = 'https://raw.githubusercontent.com/Jitendra-unatti/fancode/refs/heads/main/data/fancode.json';
 
